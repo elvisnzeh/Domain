@@ -967,9 +967,9 @@
         // ============================================
         // EMAILJS CONFIGURATION - REPLACE THESE VALUES
         // ============================================
-        const EMAILJS_PUBLIC_KEY = "YOUR_PUBLIC_KEY_HERE";  // Replace with your EmailJS Public Key
-        const EMAILJS_SERVICE_ID = "YOUR_SERVICE_ID_HERE";  // Replace with your EmailJS Service ID
-        const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID_HERE"; // Replace with your EmailJS Template ID
+        const EMAILJS_PUBLIC_KEY = "sWO_9sQmBOTAFrAIN";  // Replace with your EmailJS Public Key
+        const EMAILJS_SERVICE_ID = "service_5kor83g";  // Replace with your EmailJS Service ID
+        const EMAILJS_TEMPLATE_ID = "template_nvq6j4d"; // Replace with your EmailJS Template ID
         
         // Initialize EmailJS
         (function(){
@@ -1181,14 +1181,14 @@
                 alert('Payment initialization failed. Please try again.');
                 console.error('Payment error:', error);
                 btn.disabled = false;
-                btn.textContent = 'Proceed to Secure Payment (₦2,500)';
+                btn.textContent = 'Proceed to Secure Payment (₦3,000)';
             }
         });
 
         async function initiatePaystackPayment(email, name) {
             // Paystack configuration
-            const PAYSTACK_PUBLIC_KEY = 'pk_test_REPLACE_WITH_YOUR_PAYSTACK_PUBLIC_KEY'; // Replace with your key
-            const AMOUNT = 250000; // ₦2,500 in kobo (Paystack uses kobo)
+            const PAYSTACK_PUBLIC_KEY = 'pk_live_f70276598a8a43ddcae6a3eb2b219d704d463662'; // Replace with your key
+            const AMOUNT = 300000; // ₦3,000 in kobo (Paystack uses kobo)
 
             // In production, load Paystack script dynamically
             if (!window.PaystackPop) {
