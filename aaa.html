@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paystack Loading Test</title>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+        .status.loading {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            color: #856404;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #0284c7;
+        }
+        .details {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0ea5e9;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🧪 Paystack Loading Test</h1>
+        <p style="color: #666; margin-bottom: 20px;">
+            This simple test checks if Paystack loads properly in your browser.
+        </p>
+
+        <div id="status" class="status loading">
+            <div class="spinner"></div>
+            Checking if Paystack loaded...
+        </div>
+
+        <div id="details" class="details" style="display: none;"></div>
+
+        <button id="testBtn" onclick="runManualTest()" style="display: none;">
+            🔄 Run Test Again
+        </button>
+    </div>
+
+    <script>
+        let testResults = {
+            paystackLoaded: false,
+            loadTime: 0,
+            scriptUrl: 'https://js.paystack.co/v1/inline.js',
+            timestamp: new Date().toISOString()
+        };
+
+        // Test immediately on load
+        window.addEventListener('load', function() {
+            console.log('=== PAYSTACK LOADING TEST ===');
+            console.log('Page loaded at:', new Date().toLocaleTimeString());
+            
+            // Wait a moment for script to execute
+            setTimeout(runTest, 500);
+        });
+
+        function runTest() {
+            const statusDiv = document.getElementById('status');
+            const detailsDiv = document.getElementById('details');
+            const testBtn = document.getElementById('testBtn');
+            
+            console.log('Running Paystack test...');
+            
+            // Check if PaystackPop exists
+            if (typeof PaystackPop !== 'undefined') {
+                // SUCCESS!
+                testResults.paystackLoaded = true;
+                
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = `
+                    ✅ <strong>SUCCESS!</strong><br>
+                    Paystack loaded correctly in your browser.
+                `;
+                
+                console.log('✅ PaystackPop is defined');
+                console.log('PaystackPop object:', PaystackPop);
+                
+                detailsDiv.innerHTML = `
+                    <strong>Test Results:</strong><br>
+                    • PaystackPop: <span style="color: green;">✓ Loaded</span><br>
+                    • Script URL: ${testResults.scriptUrl}<br>
+                    • Browser: ${navigator.userAgent.split(' ').pop()}<br>
+                    • Time: ${new Date().toLocaleTimeString()}<br>
+                    <br>
+                    <strong>Next Steps:</strong><br>
+                    Your browser can load Paystack! The problem is elsewhere.<br>
+                    Check your API key in the main tax calculator file.
+                `;
+                detailsDiv.style.display = 'block';
+                
+            } else {
+                // FAILED!
+                testResults.paystackLoaded = false;
+                
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = `
+                    ❌ <strong>FAILED!</strong><br>
+                    Paystack did NOT load in your browser.
+                `;
+                
+                console.error('❌ PaystackPop is NOT defined');
+                console.log('Checking if script tag exists...');
+                
+                const scripts = document.querySelectorAll('script');
+                let paystackScriptFound = false;
+                scripts.forEach(script => {
+                    if (script.src.includes('paystack')) {
+                        paystackScriptFound = true;
+                        console.log('Paystack script tag found:', script.src);
+                    }
+                });
+                
+                if (!paystackScriptFound) {
+                    console.error('Paystack script tag is missing from HTML!');
+                }
+                
+                // Check network connectivity
+                fetch(testResults.scriptUrl)
+                    .then(response => {
+                        if (response.ok) {
+                            console.log('✓ Can reach Paystack CDN');
+                            detailsDiv.innerHTML = `
+                                <strong>Diagnostic Info:</strong><br>
+                                • PaystackPop: <span style="color: red;">✗ Not Loaded</span><br>
+                                • Network: <span style="color: green;">✓ Can reach Paystack CDN</span><br>
+                                • Script Tag: <span style="color: ${paystackScriptFound ? 'green' : 'red'};">${paystackScriptFound ? '✓' : '✗'} ${paystackScriptFound ? 'Found' : 'Missing'}</span><br>
+                                <br>
+                                <strong>Possible Causes:</strong><br>
+                                • Browser extension blocking the script<br>
+                                • Ad blocker interfering<br>
+                                • Script loaded but failed to execute<br>
+                                <br>
+                                <strong>Try:</strong><br>
+                                1. Disable ad blocker<br>
+                                2. Try Incognito/Private mode<br>
+                                3. Try different browser<br>
+                                4. Click "Run Test Again" button
+                            `;
+                        } else {
+                            console.error('✗ Cannot reach Paystack CDN');
+                            detailsDiv.innerHTML = `
+                                <strong>Diagnostic Info:</strong><br>
+                                • PaystackPop: <span style="color: red;">✗ Not Loaded</span><br>
+                                • Network: <span style="color: red;">✗ Cannot reach Paystack CDN</span><br>
+                                <br>
+                                <strong>Problem:</strong><br>
+                                Your browser cannot download the Paystack script.<br>
+                                <br>
+                                <strong>Possible Causes:</strong><br>
+                                • No internet connection<br>
+                                • Firewall blocking js.paystack.co<br>
+                                • Network restrictions<br>
+                                • VPN interference<br>
+                                <br>
+                                <strong>Try:</strong><br>
+                                1. Check internet connection<br>
+                                2. Disable VPN<br>
+                                3. Try different network<br>
+                                4. Contact network admin
+                            `;
+                        }
+                        detailsDiv.style.display = 'block';
+                    })
+                    .catch(error => {
+                        console.error('Network error:', error);
+                        detailsDiv.innerHTML = `
+                            <strong>Diagnostic Info:</strong><br>
+                            • PaystackPop: <span style="color: red;">✗ Not Loaded</span><br>
+                            • Network: <span style="color: red;">✗ Connection Error</span><br>
+                            • Error: ${error.message}<br>
+                            <br>
+                            <strong>Problem:</strong><br>
+                            Cannot connect to Paystack servers.<br>
+                            Check your internet connection.
+                        `;
+                        detailsDiv.style.display = 'block';
+                    });
+            }
+            
+            testBtn.style.display = 'block';
+            console.log('Test results:', testResults);
+        }
+
+        function runManualTest() {
+            document.getElementById('status').className = 'status loading';
+            document.getElementById('status').innerHTML = '<div class="spinner"></div>Checking again...';
+            document.getElementById('details').style.display = 'none';
+            
+            setTimeout(runTest, 1000);
+        }
+
+        // Log helpful debug info
+        console.log('Browser:', navigator.userAgent);
+        console.log('Online?', navigator.onLine);
+        console.log('Current time:', new Date().toISOString());
+    </script>
+</body>
+</html>
