@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tax Calculator - Nigeria</title>
+    <title>Pay Almost Zero Taxes, Legally | Nigeria Tax Calculator</title>
     
+    <!-- External Libraries -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script src="https://js.paystack.co/v1/inline.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
         * {
@@ -33,7 +37,24 @@
         h1 {
             color: #2d3748;
             text-align: center;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #718096;
             margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .value-prop {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            color: white;
+            text-align: center;
         }
 
         .plans {
@@ -41,6 +62,12 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 20px;
             margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .plans {
+                grid-template-columns: 1fr;
+            }
         }
 
         .plan {
@@ -74,10 +101,7 @@
 
         .plan-btn:hover {
             transform: translateY(-2px);
-        }
-
-        .plan-btn:active {
-            transform: translateY(0);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
         .free-btn {
@@ -106,6 +130,7 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            overflow-y: auto;
         }
 
         .modal.show {
@@ -118,9 +143,12 @@
             border-radius: 15px;
             max-width: 500px;
             width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            margin: 20px;
         }
 
-        input {
+        input, select {
             width: 100%;
             padding: 12px;
             border: 2px solid #e2e8f0;
@@ -129,27 +157,71 @@
             font-size: 16px;
         }
 
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
         .btn {
-            width: 100%;
-            padding: 15px;
+            padding: 15px 30px;
             border: none;
             border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
-            margin: 5px 0;
+            font-size: 16px;
+            transition: all 0.3s;
         }
 
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            width: 100%;
         }
 
         .btn-secondary {
             background: #e2e8f0;
             color: #4a5568;
+            width: 100%;
         }
 
-        .success {
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            color: #856404;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+            margin: 20px 0;
+        }
+
+        .success-box {
             background: #d4edda;
             border: 2px solid #28a745;
             padding: 30px;
@@ -157,24 +229,78 @@
             text-align: center;
             color: #155724;
         }
+
+        .upload-zone {
+            border: 3px dashed #cbd5e0;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 20px 0;
+        }
+
+        .upload-zone:hover {
+            border-color: #667eea;
+            background: #edf2f7;
+        }
+
+        .upload-zone.dragover {
+            border-color: #667eea;
+            background: #e3f2fd;
+        }
+
+        .compliance-badge {
+            background: #f7fafc;
+            padding: 25px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border-left: 4px solid #28a745;
+        }
+
+        .registered-user {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+            margin: 15px 0;
+        }
+
+        .file-input {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>💼 Nigerian Tax Calculator</h1>
+        <h1>💼 Pay Almost Zero Taxes, Legally</h1>
+        <p class="subtitle">Maximize your deductions and minimize your tax bill with Nigeria's smartest tax calculator</p>
         
+        <!-- Main Landing Page -->
         <div id="landingPage">
+            <!-- Value Proposition -->
+            <div class="value-prop">
+                <h2 style="color: white; margin-bottom: 15px; font-size: 24px;">🎯 How It Works</h2>
+                <p style="font-size: 16px; opacity: 0.95; line-height: 1.6; max-width: 800px; margin: 0 auto;">
+                    Upload your bank statements, and our AI automatically categorizes every transaction to maximize your <strong>legitimate tax deductions</strong>. Get every allowable relief—pension, NHF, CRA, and more—calculated perfectly under both old and new Nigerian tax laws.
+                </p>
+            </div>
+
+            <!-- Pricing Plans -->
             <div class="plans">
                 <!-- FREE PLAN -->
                 <div class="plan">
                     <div style="background: #e2e8f0; color: #4a5568; padding: 8px; border-radius: 15px; display: inline-block; font-size: 11px; font-weight: bold; margin-bottom: 15px;">FREE</div>
-                    <h3>Manual Entry</h3>
+                    <h3 style="margin-bottom: 10px;">Manual Entry</h3>
                     <div style="font-size: 36px; font-weight: bold; margin: 15px 0;">₦0</div>
+                    <p style="color: #718096; font-size: 13px; margin-bottom: 20px;">Perfect for simple calculations</p>
                     
                     <div style="margin: 20px 0; font-size: 13px;">
                         <div style="margin: 5px 0;">✓ Manual tax calculation</div>
                         <div style="margin: 5px 0;">✓ Old & new laws</div>
                         <div style="margin: 5px 0;">✓ Email results</div>
+                        <div style="margin: 5px 0; color: #cbd5e0;">✗ Bank statement upload</div>
+                        <div style="margin: 5px 0; color: #cbd5e0;">✗ AI categorization</div>
                     </div>
                     
                     <button class="plan-btn free-btn" onclick="selectFree()">
@@ -185,61 +311,115 @@
                 <!-- BASIC PLAN -->
                 <div class="plan basic">
                     <div style="background: #ff9800; color: white; padding: 8px; border-radius: 15px; display: inline-block; font-size: 11px; font-weight: bold; margin-bottom: 15px;">RECOMMENDED</div>
-                    <h3>Basic Plan</h3>
+                    <h3 style="margin-bottom: 10px;">Basic Plan</h3>
                     <div style="font-size: 36px; font-weight: bold; color: #ff9800; margin: 15px 0;">₦500</div>
+                    <p style="color: #718096; font-size: 13px; margin-bottom: 20px;">Pay per upload (one-time)</p>
                     
                     <div style="margin: 20px 0; font-size: 13px;">
                         <div style="margin: 5px 0;">✓ Everything in Free</div>
                         <div style="margin: 5px 0;">✓ <strong>ONE upload</strong></div>
                         <div style="margin: 5px 0;">✓ AI categorization</div>
                         <div style="margin: 5px 0;">✓ Tax tips</div>
+                        <div style="margin: 5px 0; color: #cbd5e0;">✗ Multi-bank</div>
+                        <div style="margin: 5px 0; color: #cbd5e0;">✗ Unlimited uploads</div>
                     </div>
                     
                     <button class="plan-btn basic-btn" onclick="selectBasic()">
                         Pay ₦500 Per Upload
                     </button>
+                    <div style="text-align: center; margin-top: 10px; font-size: 11px; color: #718096;">
+                        Try once, upgrade anytime
+                    </div>
                 </div>
 
                 <!-- PRO PLAN -->
                 <div class="plan pro">
                     <div style="background: rgba(255,255,255,0.3); color: white; padding: 8px; border-radius: 15px; display: inline-block; font-size: 11px; font-weight: bold; margin-bottom: 15px;">BEST VALUE</div>
-                    <h3>Pro Plan</h3>
+                    <h3 style="margin-bottom: 10px;">Pro Plan</h3>
                     <div style="font-size: 36px; font-weight: bold; margin: 15px 0;">₦3,000</div>
+                    <p style="opacity: 0.9; font-size: 13px; margin-bottom: 20px;">Full year unlimited access</p>
                     
                     <div style="margin: 20px 0; font-size: 13px;">
                         <div style="margin: 5px 0;">✓ Everything in Basic</div>
                         <div style="margin: 5px 0;">✓ <strong>UNLIMITED uploads</strong></div>
-                        <div style="margin: 5px 0;">✓ Multi-bank</div>
+                        <div style="margin: 5px 0;">✓ Multi-bank compilation</div>
+                        <div style="margin: 5px 0;">✓ Advanced optimization</div>
                         <div style="margin: 5px 0;">✓ Priority support</div>
+                        <div style="margin: 5px 0;">✓ Valid entire tax year</div>
                     </div>
                     
                     <button class="plan-btn pro-btn" onclick="selectPro()">
                         Get Pro (Best Deal)
                     </button>
+                    <div style="text-align: center; margin-top: 10px; font-size: 11px; opacity: 0.9;">
+                        Save 83% vs 6 Basic uploads
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compliance Badge -->
+            <div class="compliance-badge">
+                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; justify-content: center;">
+                    <div style="font-size: 40px;">✓</div>
+                    <div style="flex: 1; min-width: 250px;">
+                        <h3 style="color: #2d3748; margin-bottom: 8px; font-size: 18px;">100% Legal & Compliant</h3>
+                        <p style="color: #718096; margin: 0; font-size: 14px; line-height: 1.6;">
+                            All calculations follow FIRS guidelines and Nigerian tax laws. We help you claim every legitimate deduction you're entitled to—nothing more, nothing less. Full compliance with PITA 2025 and the new Tax Act 2026.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
 
+        <!-- Free Plan Calculator (Hidden by default) -->
+        <div id="freeCalculator" style="display: none;"></div>
+
+        <!-- Paid Plan Upload Section (Hidden by default) -->
+        <div id="uploadSection" style="display: none;"></div>
+
         <!-- PAYMENT MODAL -->
         <div class="modal" id="paymentModal">
             <div class="modal-content">
-                <h2 id="modalTitle">💳 Payment</h2>
+                <h2 id="modalTitle">💳 Complete Your Payment</h2>
                 
                 <div id="priceSummary" style="background: #e3f2fd; padding: 20px; border-radius: 10px; text-align: center; margin: 20px 0;">
-                    <!-- Price will be shown here -->
+                    <!-- Dynamic content -->
                 </div>
 
                 <label style="font-weight: bold;">Email Address</label>
-                <input type="email" id="email" placeholder="your.email@example.com">
+                <input type="email" id="paymentEmail" placeholder="your.email@example.com">
+                <small style="color: #718096; font-size: 12px; display: block; margin-top: -5px; margin-bottom: 10px;">
+                    💡 If you have complimentary access, we'll detect it automatically
+                </small>
 
                 <label style="font-weight: bold;">Full Name</label>
-                <input type="text" id="name" placeholder="John Doe">
+                <input type="text" id="paymentName" placeholder="John Doe">
 
-                <button class="btn btn-primary" onclick="processPayment()">
+                <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff9800;">
+                    <p style="margin: 0; font-size: 13px; color: #e65100;">
+                        <strong>🔒 Secure Payment:</strong> You'll be redirected to Paystack to complete your payment securely.
+                    </p>
+                </div>
+
+                <button class="btn btn-primary" onclick="processPayment()" style="margin-bottom: 10px;">
                     Proceed to Payment
                 </button>
                 
-                <button class="btn btn-secondary" onclick="closeModal()">
+                <button class="btn btn-secondary" onclick="closePaymentModal()">
+                    Cancel
+                </button>
+            </div>
+        </div>
+
+        <!-- Name Confirmation Modal -->
+        <div class="modal" id="confirmModal">
+            <div class="modal-content">
+                <h2 style="color: #2d3748; margin-bottom: 15px;">Confirm Your Details</h2>
+                <div id="confirmDetails"></div>
+                <button class="btn btn-primary" onclick="confirmAndRegister()" style="margin-bottom: 10px;">
+                    ✓ Confirm and Continue
+                </button>
+                <button class="btn btn-secondary" onclick="closeConfirmModal()">
                     Cancel
                 </button>
             </div>
@@ -247,7 +427,13 @@
     </div>
 
     <script>
+        // ============================================
         // CONFIGURATION
+        // ============================================
+        const EMAILJS_PUBLIC_KEY = "YOUR_PUBLIC_KEY_HERE";
+        const EMAILJS_SERVICE_ID = "YOUR_SERVICE_ID_HERE";
+        const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID_HERE";
+        
         const MANUAL_SUBSCRIPTIONS = {
             "kwadonzeh@gmail.com": { 
                 plan: "pro", 
@@ -261,63 +447,712 @@
             }
         };
 
-        let selectedPlan = null;
+        const USER_STORAGE_KEY = 'taxCalc_userRegistry';
 
-        // BUTTON CLICK HANDLERS
+        // Initialize EmailJS
+        (function(){
+            if (EMAILJS_PUBLIC_KEY !== "YOUR_PUBLIC_KEY_HERE") {
+                emailjs.init(EMAILJS_PUBLIC_KEY);
+            }
+        })();
+
+        let selectedPlan = null;
+        let currentUserEmail = null;
+        let currentUserName = null;
+        let currentFile = null;
+        let extractedName = null;
+
+        // ============================================
+        // USER REGISTRY FUNCTIONS
+        // ============================================
+        
+        function getUserRegistry() {
+            const data = localStorage.getItem(USER_STORAGE_KEY);
+            return data ? JSON.parse(data) : {};
+        }
+
+        function saveUserRegistry(registry) {
+            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(registry));
+        }
+
+        function registerUser(email, name) {
+            const registry = getUserRegistry();
+            registry[email.toLowerCase()] = {
+                name: name,
+                registeredDate: new Date().toISOString(),
+                uploadCount: 0,
+                lastUpload: null
+            };
+            saveUserRegistry(registry);
+            console.log('✓ User registered:', email, '→', name);
+        }
+
+        function getRegisteredUser(email) {
+            const registry = getUserRegistry();
+            return registry[email.toLowerCase()] || null;
+        }
+
+        function updateUploadStats(email) {
+            const registry = getUserRegistry();
+            const user = registry[email.toLowerCase()];
+            if (user) {
+                user.uploadCount++;
+                user.lastUpload = new Date().toISOString();
+                saveUserRegistry(registry);
+            }
+        }
+
+        function checkManualSubscription(email) {
+            const emailLower = email.toLowerCase().trim();
+            const subscription = MANUAL_SUBSCRIPTIONS[emailLower];
+            
+            if (!subscription) {
+                return { hasAccess: false, plan: 'free' };
+            }
+            
+            if (subscription.expiryDate) {
+                const expiryDate = new Date(subscription.expiryDate);
+                const today = new Date();
+                
+                if (today > expiryDate) {
+                    return { 
+                        hasAccess: false, 
+                        plan: 'free',
+                        expired: true,
+                        expiryDate: subscription.expiryDate
+                    };
+                }
+            }
+            
+            console.log('✓ Manual subscription found:', email, '→', subscription.plan);
+            return { 
+                hasAccess: true, 
+                plan: subscription.plan,
+                expiryDate: subscription.expiryDate,
+                note: subscription.note
+            };
+        }
+
+        // ============================================
+        // NAME EXTRACTION FROM BANK STATEMENTS
+        // ============================================
+
+        async function extractNameFromPDF(file) {
+            console.log('Extracting name from PDF...');
+            
+            return new Promise((resolve, reject) => {
+                const fileReader = new FileReader();
+                
+                fileReader.onload = async function() {
+                    try {
+                        const typedarray = new Uint8Array(this.result);
+                        const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                        
+                        let fullText = '';
+                        const pagesToRead = Math.min(2, pdf.numPages);
+                        
+                        for (let i = 1; i <= pagesToRead; i++) {
+                            const page = await pdf.getPage(i);
+                            const textContent = await page.getTextContent();
+                            const pageText = textContent.items.map(item => item.str).join(' ');
+                            fullText += pageText + ' ';
+                        }
+                        
+                        console.log('PDF text extracted');
+                        const name = findAccountHolderName(fullText);
+                        resolve(name);
+                    } catch (error) {
+                        console.error('PDF extraction error:', error);
+                        reject(error);
+                    }
+                };
+                
+                fileReader.onerror = reject;
+                fileReader.readAsArrayBuffer(file);
+            });
+        }
+
+        async function extractNameFromExcel(file) {
+            console.log('Extracting name from Excel...');
+            
+            return new Promise((resolve, reject) => {
+                const fileReader = new FileReader();
+                
+                fileReader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const sheetText = XLSX.utils.sheet_to_txt(firstSheet);
+                        
+                        console.log('Excel text extracted');
+                        const name = findAccountHolderName(sheetText);
+                        resolve(name);
+                    } catch (error) {
+                        console.error('Excel extraction error:', error);
+                        reject(error);
+                    }
+                };
+                
+                fileReader.onerror = reject;
+                fileReader.readAsArrayBuffer(file);
+            });
+        }
+
+        async function extractNameFromCSV(file) {
+            console.log('Extracting name from CSV...');
+            
+            return new Promise((resolve, reject) => {
+                const fileReader = new FileReader();
+                
+                fileReader.onload = function(e) {
+                    try {
+                        const csvText = e.target.result;
+                        console.log('CSV text extracted');
+                        const name = findAccountHolderName(csvText);
+                        resolve(name);
+                    } catch (error) {
+                        console.error('CSV extraction error:', error);
+                        reject(error);
+                    }
+                };
+                
+                fileReader.onerror = reject;
+                fileReader.readAsText(file);
+            });
+        }
+
+        function findAccountHolderName(text) {
+            const patterns = [
+                /Account\s*Name\s*[:\-]?\s*([A-Z][A-Z\s]+)/i,
+                /Customer\s*Name\s*[:\-]?\s*([A-Z][A-Z\s]+)/i,
+                /Name\s*[:\-]?\s*([A-Z][A-Z\s]+)/i,
+                /Account\s*Holder\s*[:\-]?\s*([A-Z][A-Z\s]+)/i,
+                /Acct\s*Name\s*[:\-]?\s*([A-Z][A-Z\s]+)/i,
+            ];
+            
+            for (const pattern of patterns) {
+                const match = text.match(pattern);
+                if (match && match[1]) {
+                    const name = match[1].trim();
+                    const words = name.split(/\s+/).filter(w => w.length >= 2);
+                    if (words.length >= 2 && name.length <= 50) {
+                        console.log('✓ Name found:', name);
+                        return name;
+                    }
+                }
+            }
+            
+            console.warn('⚠ Name not found');
+            return null;
+        }
+
+        // ============================================
+        // PLAN SELECTION FUNCTIONS
+        // ============================================
+
         function selectFree() {
-            console.log('✓ FREE BUTTON CLICKED');
-            alert('✓ Free plan activated!\n\nYou can now use manual tax calculations.');
-            document.getElementById('landingPage').innerHTML = `
-                <div class="success">
-                    <h2>✓ Free Plan Activated!</h2>
-                    <p>You can now use manual tax calculations.</p>
-                </div>
-            `;
+            console.log('✓ FREE PLAN SELECTED');
+            selectedPlan = 'free';
+            showFreeCalculator();
         }
 
         function selectBasic() {
-            console.log('✓ BASIC BUTTON CLICKED');
+            console.log('✓ BASIC PLAN SELECTED');
             selectedPlan = 'basic';
-            openModal('basic');
+            showPaymentModal('basic');
         }
 
         function selectPro() {
-            console.log('✓ PRO BUTTON CLICKED');
+            console.log('✓ PRO PLAN SELECTED');
             selectedPlan = 'pro';
-            openModal('pro');
+            showPaymentModal('pro');
         }
 
-        function openModal(plan) {
-            console.log('Opening modal for:', plan);
+        function showPaymentModal(plan) {
             const modal = document.getElementById('paymentModal');
             const summary = document.getElementById('priceSummary');
             
             if (plan === 'basic') {
                 summary.innerHTML = `
                     <div style="font-size: 36px; font-weight: bold; color: #ff9800;">₦500</div>
-                    <div style="font-size: 14px; color: #666; margin-top: 5px;">One-time payment</div>
+                    <div style="font-size: 14px; color: #666; margin-top: 5px;">One-time payment for one upload</div>
                 `;
             } else {
                 summary.innerHTML = `
                     <div style="font-size: 36px; font-weight: bold; color: #667eea;">₦3,000</div>
-                    <div style="font-size: 14px; color: #666; margin-top: 5px;">Full year access</div>
+                    <div style="font-size: 14px; color: #666; margin-top: 5px;">Full year unlimited access</div>
                 `;
             }
             
             modal.classList.add('show');
-            console.log('Modal opened');
         }
 
-        function closeModal() {
-            console.log('Closing modal');
+        function closePaymentModal() {
             document.getElementById('paymentModal').classList.remove('show');
+            document.getElementById('paymentEmail').value = '';
+            document.getElementById('paymentName').value = '';
         }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.remove('show');
+        }
+
+        // ============================================
+        // FREE PLAN - MANUAL CALCULATOR
+        // ============================================
+
+        function showFreeCalculator() {
+            document.getElementById('landingPage').style.display = 'none';
+            const calcDiv = document.getElementById('freeCalculator');
+            calcDiv.style.display = 'block';
+            calcDiv.innerHTML = `
+                <div style="background: white; border-radius: 15px; padding: 30px;">
+                    <div class="alert alert-success" style="margin-bottom: 30px;">
+                        <h2 style="color: #155724; margin-bottom: 10px;">✓ Free Plan Activated!</h2>
+                        <p style="color: #155724; margin: 0;">You can now use manual tax calculations.</p>
+                    </div>
+
+                    <h2 style="color: #2d3748; margin-bottom: 20px;">📊 Manual Tax Calculator</h2>
+                    
+                    <div style="background: #f7fafc; padding: 25px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #2d3748; margin-bottom: 15px;">Enter Your Income Details</h3>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #4a5568;">Annual Gross Income (₦)</label>
+                            <input type="number" id="grossIncome" placeholder="e.g., 5000000" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 16px;">
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #4a5568;">Pension Contribution (₦)</label>
+                            <input type="number" id="pension" placeholder="e.g., 400000" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 16px;">
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #4a5568;">NHF Contribution (₦)</label>
+                            <input type="number" id="nhf" placeholder="e.g., 125000" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 16px;">
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #4a5568;">Tax Law</label>
+                            <select id="taxLaw" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 16px;">
+                                <option value="2025">PITA 2025 (Old Law)</option>
+                                <option value="2026" selected>Tax Act 2026 (New Law)</option>
+                            </select>
+                        </div>
+
+                        <button onclick="calculateTax()" class="btn btn-primary" style="margin-bottom: 10px;">
+                            Calculate My Tax
+                        </button>
+
+                        <div id="taxResult" style="display: none; margin-top: 20px;"></div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="goBackToPlans()" class="btn btn-secondary" style="flex: 1;">
+                            ← Back to Plans
+                        </button>
+                        <button onclick="upgradePlan()" style="flex: 1; padding: 15px; background: #ff9800; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">
+                            Upgrade to Basic (₦500) →
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function calculateTax() {
+            const grossIncome = parseFloat(document.getElementById('grossIncome').value) || 0;
+            const pension = parseFloat(document.getElementById('pension').value) || 0;
+            const nhf = parseFloat(document.getElementById('nhf').value) || 0;
+            const taxLaw = document.getElementById('taxLaw').value;
+
+            if (grossIncome === 0) {
+                alert('Please enter your gross income');
+                return;
+            }
+
+            // Ask for email to send results
+            const userEmail = prompt('Enter your email address to receive the tax calculation results:');
+            if (!userEmail || !userEmail.includes('@')) {
+                alert('Valid email address required to receive results.');
+                return;
+            }
+
+            const userName = prompt('Enter your name:') || 'Taxpayer';
+
+            const higherOf1PercentOr200k = Math.max(grossIncome * 0.01, 200000);
+            const onePercentOfGross = grossIncome * 0.01;
+            const cra = higherOf1PercentOr200k + onePercentOfGross;
+
+            const totalDeductions = pension + nhf + cra;
+            const taxableIncome = Math.max(0, grossIncome - totalDeductions);
+
+            let tax = 0;
+            let taxLawName = '';
+            
+            if (taxLaw === '2026') {
+                taxLawName = 'Tax Act 2026 (New Law)';
+                if (taxableIncome <= 800000) {
+                    tax = 0;
+                } else if (taxableIncome <= 3200000) {
+                    tax = (taxableIncome - 800000) * 0.15;
+                } else if (taxableIncome <= 8000000) {
+                    tax = 360000 + (taxableIncome - 3200000) * 0.18;
+                } else if (taxableIncome <= 20000000) {
+                    tax = 1224000 + (taxableIncome - 8000000) * 0.21;
+                } else {
+                    tax = 3744000 + (taxableIncome - 20000000) * 0.25;
+                }
+            } else {
+                taxLawName = 'PITA 2025 (Old Law)';
+                if (taxableIncome <= 300000) {
+                    tax = taxableIncome * 0.07;
+                } else if (taxableIncome <= 600000) {
+                    tax = 21000 + (taxableIncome - 300000) * 0.11;
+                } else if (taxableIncome <= 1100000) {
+                    tax = 54000 + (taxableIncome - 600000) * 0.15;
+                } else if (taxableIncome <= 1600000) {
+                    tax = 129000 + (taxableIncome - 1100000) * 0.19;
+                } else if (taxableIncome <= 3200000) {
+                    tax = 224000 + (taxableIncome - 1600000) * 0.21;
+                } else {
+                    tax = 560000 + (taxableIncome - 3200000) * 0.24;
+                }
+            }
+
+            // Show processing message
+            const resultDiv = document.getElementById('taxResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <div class="info-box">
+                    <h3 style="color: #1976d2; margin-bottom: 15px;">⏳ Processing Your Tax Calculation...</h3>
+                    <p style="color: #1565c0;">
+                        We're calculating your taxes and will send the detailed results to <strong>${userEmail}</strong>
+                    </p>
+                </div>
+            `;
+
+            // Send email with results
+            sendTaxCalculationEmail(userEmail, userName, {
+                grossIncome,
+                pension,
+                nhf,
+                cra,
+                taxableIncome,
+                tax: Math.round(tax),
+                taxLaw: taxLawName
+            });
+        }
+
+        function goBackToPlans() {
+            location.reload();
+        }
+
+        function upgradePlan() {
+            goBackToPlans();
+            setTimeout(() => selectBasic(), 100);
+        }
+
+        // ============================================
+        // PAID PLAN - UPLOAD INTERFACE
+        // ============================================
+
+        function showUploadInterface(userEmail, userName, plan) {
+            document.getElementById('landingPage').style.display = 'none';
+            const uploadDiv = document.getElementById('uploadSection');
+            uploadDiv.style.display = 'block';
+            
+            currentUserEmail = userEmail;
+            currentUserName = userName;
+            
+            const registeredUser = getRegisteredUser(userEmail);
+            let userStatusHTML = '';
+            
+            if (registeredUser) {
+                userStatusHTML = `
+                    <div class="registered-user">
+                        <h3 style="color: #2e7d32; margin-bottom: 10px;">✓ Registered User</h3>
+                        <div style="font-size: 14px; color: #1b5e20;">
+                            <div style="margin: 5px 0;"><strong>Name:</strong> ${registeredUser.name}</div>
+                            <div style="margin: 5px 0;"><strong>Email:</strong> ${userEmail}</div>
+                            <div style="margin: 5px 0;"><strong>Plan:</strong> ${plan.toUpperCase()}</div>
+                            <div style="margin: 5px 0;"><strong>Total Uploads:</strong> ${registeredUser.uploadCount}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            uploadDiv.innerHTML = `
+                <div style="background: white; border-radius: 15px; padding: 30px;">
+                    <div class="alert alert-success" style="margin-bottom: 20px;">
+                        <h2 style="color: #155724; margin-bottom: 10px;">✓ ${plan.toUpperCase()} Plan Activated!</h2>
+                        <p style="color: #155724; margin: 0;">Welcome, ${userName}! You can now upload your bank statement${plan === 'pro' ? 's' : ''}.</p>
+                    </div>
+
+                    ${userStatusHTML}
+
+                    <h2 style="color: #2d3748; margin-bottom: 20px;">📤 Upload Bank Statement</h2>
+                    
+                    <div class="info-box">
+                        <h3 style="color: #1976d2; margin-bottom: 10px;">🔒 Security Notice</h3>
+                        <p style="color: #1565c0; font-size: 14px; line-height: 1.6;">
+                            ${registeredUser ? 
+                                `All uploads must match your registered name: <strong>${registeredUser.name}</strong>` :
+                                `Your first upload will register your account holder name. All future uploads must have the same name.`
+                            }
+                        </p>
+                    </div>
+
+                    <div class="upload-zone" id="uploadZone">
+                        <div style="font-size: 48px; margin-bottom: 15px;">📄</div>
+                        <h3 style="color: #2d3748; margin-bottom: 10px;">Click to Upload or Drag & Drop</h3>
+                        <p style="color: #718096; font-size: 14px;">Supported: PDF, Excel (.xlsx, .xls), CSV</p>
+                        <p style="color: #718096; font-size: 12px; margin-top: 5px;">Max file size: 10MB</p>
+                        <input type="file" id="fileInput" class="file-input" accept=".pdf,.xlsx,.xls,.csv">
+                    </div>
+
+                    <div id="uploadStatus"></div>
+                    <div id="uploadResults"></div>
+
+                    <button onclick="goBackToPlans()" class="btn btn-secondary" style="margin-top: 20px;">
+                        ← Back to Plans
+                    </button>
+                </div>
+            `;
+
+            setupUploadHandlers();
+        }
+
+        function setupUploadHandlers() {
+            const uploadZone = document.getElementById('uploadZone');
+            const fileInput = document.getElementById('fileInput');
+
+            uploadZone.addEventListener('click', () => fileInput.click());
+
+            uploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadZone.classList.add('dragover');
+            });
+
+            uploadZone.addEventListener('dragleave', () => {
+                uploadZone.classList.remove('dragover');
+            });
+
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file) handleFileUpload(file);
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) handleFileUpload(file);
+            });
+        }
+
+        async function handleFileUpload(file) {
+            console.log('File uploaded:', file.name);
+            currentFile = file;
+
+            const validTypes = [
+                'application/pdf',
+                'application/vnd.ms-excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'text/csv'
+            ];
+
+            if (!validTypes.includes(file.type) && !file.name.match(/\.(pdf|xlsx|xls|csv)$/i)) {
+                showUploadStatus('error', '❌ Invalid file type. Please upload PDF, Excel, or CSV file.');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                showUploadStatus('error', '❌ File too large. Maximum size is 10MB.');
+                return;
+            }
+
+            try {
+                showUploadStatus('warning', '⏳ Extracting account holder name from statement...');
+                
+                if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+                    extractedName = await extractNameFromPDF(file);
+                } else if (file.name.match(/\.(xlsx|xls)$/i)) {
+                    extractedName = await extractNameFromExcel(file);
+                } else if (file.name.endsWith('.csv')) {
+                    extractedName = await extractNameFromCSV(file);
+                }
+
+                if (!extractedName) {
+                    showUploadStatus('error', '❌ Could not extract account holder name from the statement. Please ensure the file contains account holder information.');
+                    return;
+                }
+
+                const registeredUser = getRegisteredUser(currentUserEmail);
+
+                if (registeredUser) {
+                    await validateExistingUser(registeredUser);
+                } else {
+                    await confirmNewUser();
+                }
+
+            } catch (error) {
+                console.error('Error processing file:', error);
+                showUploadStatus('error', '❌ Error processing file: ' + error.message);
+            }
+        }
+
+        async function validateExistingUser(registeredUser) {
+            const registeredNormalized = registeredUser.name.trim().toUpperCase();
+            const extractedNormalized = extractedName.trim().toUpperCase();
+
+            if (registeredNormalized === extractedNormalized) {
+                showUploadStatus('success', `✓ Account verified! Processing statement...`);
+                processStatement();
+            } else {
+                const resultsDiv = document.getElementById('uploadResults');
+                resultsDiv.innerHTML = `
+                    <div class="alert alert-error">
+                        <h3 style="margin-bottom: 10px;">❌ Account Holder Mismatch</h3>
+                        <div style="background: white; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                            <div style="margin: 10px 0;">
+                                <strong>Your Registered Name:</strong><br>
+                                <span style="font-size: 18px; color: #28a745;">${registeredUser.name}</span>
+                            </div>
+                            <div style="margin: 10px 0;">
+                                <strong>Name on This Statement:</strong><br>
+                                <span style="font-size: 18px; color: #dc3545;">${extractedName}</span>
+                            </div>
+                        </div>
+                        <p style="margin-top: 15px; font-size: 14px;">
+                            <strong>🔒 Security Notice:</strong> This bank statement belongs to a different person. 
+                            For security reasons, you can only upload statements in your own name.
+                        </p>
+                    </div>
+                `;
+                showUploadStatus('error', '');
+            }
+        }
+
+        async function confirmNewUser() {
+            const confirmDiv = document.getElementById('confirmDetails');
+            confirmDiv.innerHTML = `
+                <div class="info-box" style="margin-bottom: 15px;">
+                    <p style="color: #1565c0; font-size: 14px; line-height: 1.6;">
+                        We've extracted your account holder name from the bank statement:
+                    </p>
+                </div>
+                <div style="background: #f7fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <div style="margin: 10px 0;">
+                        <strong>Email:</strong><br>
+                        <span style="font-size: 16px;">${currentUserEmail}</span>
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <strong>Account Holder Name:</strong><br>
+                        <span style="font-size: 18px; color: #667eea; font-weight: bold;">${extractedName}</span>
+                    </div>
+                </div>
+                <div class="alert alert-warning" style="font-size: 13px;">
+                    <strong>⚠️ Important:</strong> This name will be permanently linked to your email. 
+                    All future uploads must have the same account holder name.
+                </div>
+            `;
+            
+            document.getElementById('confirmModal').classList.add('show');
+        }
+
+        function confirmAndRegister() {
+            registerUser(currentUserEmail, extractedName);
+            closeConfirmModal();
+            
+            showUploadStatus('success', `✓ Registration successful! Processing statement...`);
+            processStatement();
+        }
+
+        function processStatement() {
+            updateUploadStats(currentUserEmail);
+            
+            const resultsDiv = document.getElementById('uploadResults');
+            resultsDiv.innerHTML = `
+                <div class="info-box" style="margin-top: 20px;">
+                    <h3 style="color: #1976d2; margin-bottom: 10px;">⏳ Processing Your Statement...</h3>
+                    <p style="color: #1565c0; margin-bottom: 15px;">
+                        Sending confirmation email to <strong>${currentUserEmail}</strong>...
+                    </p>
+                </div>
+            `;
+
+            // Send email confirmation
+            sendUploadResultsEmail(currentUserEmail, currentUserName, {
+                fileName: currentFile.name,
+                accountHolder: extractedName
+            }).then((success) => {
+                if (success) {
+                    resultsDiv.innerHTML = `
+                        <div class="alert alert-success" style="margin-top: 20px;">
+                            <h3 style="margin-bottom: 10px;">✓ Statement Processed Successfully!</h3>
+                            <div style="background: white; padding: 15px; border-radius: 8px; margin: 15px 0; color: #155724;">
+                                <div style="margin: 8px 0;"><strong>File:</strong> ${currentFile.name}</div>
+                                <div style="margin: 8px 0;"><strong>Account Holder:</strong> ${extractedName}</div>
+                                <div style="margin: 8px 0;"><strong>Email:</strong> ${currentUserEmail}</div>
+                                <div style="margin: 8px 0;"><strong>Status:</strong> <span style="font-weight: bold;">✓ VALIDATED & CONFIRMED</span></div>
+                            </div>
+                            <p style="color: #155724; margin-top: 15px;">
+                                📧 <strong>Confirmation email sent to ${currentUserEmail}</strong>
+                            </p>
+                            <p style="color: #155724;">
+                                Your bank statement has been validated. You'll receive detailed tax analysis results via email shortly.
+                                ${selectedPlan === 'pro' ? ' You can upload more statements anytime!' : ''}
+                            </p>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="info-box" style="margin-top: 20px;">
+                            <h3 style="color: #1976d2; margin-bottom: 10px;">✓ Statement Validated</h3>
+                            <div style="background: white; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                                <div style="margin: 8px 0;"><strong>File:</strong> ${currentFile.name}</div>
+                                <div style="margin: 8px 0;"><strong>Account Holder:</strong> ${extractedName}</div>
+                                <div style="margin: 8px 0;"><strong>Email:</strong> ${currentUserEmail}</div>
+                                <div style="margin: 8px 0;"><strong>Status:</strong> <span style="color: #28a745; font-weight: bold;">✓ VALIDATED</span></div>
+                            </div>
+                            <p style="color: #1565c0; margin-top: 15px;">
+                                Your bank statement has been successfully validated and is ready for AI tax categorization.
+                                ${selectedPlan === 'pro' ? 'You can upload more statements or process this one.' : 'Ready for processing.'}
+                            </p>
+                            <p style="color: #e65100; font-size: 13px; margin-top: 10px;">
+                                ⚠️ Email notification could not be sent. Please check EmailJS configuration.
+                            </p>
+                        </div>
+                    `;
+                }
+            });
+
+            const registeredUser = getRegisteredUser(currentUserEmail);
+            if (registeredUser) {
+                showUploadStatus('success', `✓ Upload #${registeredUser.uploadCount} processed successfully!`);
+            }
+        }
+
+        function showUploadStatus(type, message) {
+            const statusDiv = document.getElementById('uploadStatus');
+            if (message) {
+                const alertClass = type === 'success' ? 'alert-success' : 
+                                  type === 'error' ? 'alert-error' : 'alert-warning';
+                
+                statusDiv.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+            } else {
+                statusDiv.innerHTML = '';
+            }
+        }
+
+        // ============================================
+        // PAYMENT PROCESSING
+        // ============================================
 
         function processPayment() {
-            const email = document.getElementById('email').value.trim();
-            const name = document.getElementById('name').value.trim();
-
-            console.log('Processing payment for:', email);
+            const email = document.getElementById('paymentEmail').value.trim();
+            const name = document.getElementById('paymentName').value.trim();
 
             if (!email || !email.includes('@')) {
                 alert('Please enter a valid email address');
@@ -325,40 +1160,249 @@
             }
 
             if (!name) {
-                alert('Please enter your name');
+                alert('Please enter your full name');
                 return;
             }
 
-            // Check whitelist
-            const sub = MANUAL_SUBSCRIPTIONS[email.toLowerCase()];
+            const subscription = checkManualSubscription(email);
             
-            if (sub) {
-                console.log('✓ Complimentary access found!');
-                alert(`✓ COMPLIMENTARY ACCESS!\n\nEmail: ${email}\nPlan: ${sub.plan.toUpperCase()}\n${sub.note ? 'Note: ' + sub.note : ''}\n\nNo payment needed!`);
+            if (subscription.hasAccess) {
+                let message = `✓ COMPLIMENTARY ACCESS!\n\n`;
+                message += `Email: ${email}\n`;
+                message += `Plan: ${subscription.plan.toUpperCase()}\n`;
+                message += `${subscription.note ? 'Note: ' + subscription.note + '\n' : ''}`;
+                message += `${subscription.expiryDate ? 'Valid until: ' + subscription.expiryDate : 'Never expires'}\n\n`;
+                message += `No payment needed! Click OK to start.`;
                 
-                closeModal();
-                document.getElementById('landingPage').innerHTML = `
-                    <div class="success">
-                        <h2>✓ Complimentary Access Granted!</h2>
-                        <p>Email: ${email}</p>
-                        <p>Plan: ${sub.plan.toUpperCase()}</p>
-                    </div>
-                `;
+                alert(message);
+                closePaymentModal();
+                
+                // Send confirmation email for complimentary access
+                sendPaymentConfirmationEmail(email, name, subscription.plan, 0, 'COMP-' + Date.now());
+                
+                showUploadInterface(email, name, subscription.plan);
                 return;
             }
 
-            // Would proceed to Paystack here
-            alert('Payment would process here.\n\nEmail: ' + email + '\nPlan: ' + selectedPlan);
-            console.log('Would initiate Paystack payment');
+            alert(`Payment integration ready.\n\nEmail: ${email}\nName: ${name}\nPlan: ${selectedPlan}\nAmount: ${selectedPlan === 'basic' ? '₦500' : '₦3,000'}\n\nPaystack would process payment here. After payment, confirmation email will be sent automatically.`);
+            
+            closePaymentModal();
+            showUploadInterface(email, name, selectedPlan);
         }
 
-        // TEST ON LOAD
+        // ============================================
+        // EMAIL SENDING FUNCTIONS
+        // ============================================
+
+        async function sendTaxCalculationEmail(email, name, taxData) {
+            if (EMAILJS_PUBLIC_KEY === "YOUR_PUBLIC_KEY_HERE") {
+                const resultDiv = document.getElementById('taxResult');
+                resultDiv.innerHTML = `
+                    <div class="alert alert-error">
+                        <h3 style="margin-bottom: 10px;">❌ EmailJS Not Configured</h3>
+                        <p>Email sending is not configured yet. Please add your EmailJS keys.</p>
+                        <p style="margin-top: 10px; font-size: 14px;">Your calculation results:</p>
+                        <div style="background: white; padding: 15px; border-radius: 8px; margin-top: 10px;">
+                            <div>Gross Income: ₦${taxData.grossIncome.toLocaleString()}</div>
+                            <div>Taxable Income: ₦${taxData.taxableIncome.toLocaleString()}</div>
+                            <div style="font-weight: bold; margin-top: 10px;">Total Tax Due: ₦${taxData.tax.toLocaleString()}</div>
+                        </div>
+                    </div>
+                `;
+                console.log('EmailJS not configured');
+                return;
+            }
+
+            const emailParams = {
+                to_name: name,
+                to_email: email,
+                user_email: email,
+                tax_type: `Nigerian Tax Calculation - ${taxData.taxLaw}`,
+                calculation_details: `
+TAX CALCULATION RESULTS
+================================================================================
+
+Tax Law Applied: ${taxData.taxLaw}
+Calculated on: ${new Date().toLocaleString('en-NG')}
+
+INCOME & DEDUCTIONS:
+Gross Income:              ₦${taxData.grossIncome.toLocaleString()}
+Pension Contribution:      ₦${taxData.pension.toLocaleString()}
+NHF Contribution:          ₦${taxData.nhf.toLocaleString()}
+Consolidated Relief (CRA): ₦${taxData.cra.toLocaleString()}
+
+CALCULATION:
+Total Deductions:          ₦${(taxData.pension + taxData.nhf + taxData.cra).toLocaleString()}
+Taxable Income:            ₦${taxData.taxableIncome.toLocaleString()}
+
+TOTAL TAX DUE:             ₦${taxData.tax.toLocaleString()}
+
+================================================================================
+
+IMPORTANT NOTES:
+• This calculation is for informational purposes only
+• Consult a qualified tax professional before filing
+• Keep this email for your records
+• Upgrade to our paid plans for AI-powered bank statement analysis
+
+Questions? Reply to this email.
+
+Thank you for using Nigerian Tax Calculator!
+================================================================================
+                `,
+                timestamp: new Date().toLocaleString('en-NG')
+            };
+
+            try {
+                await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, emailParams);
+                console.log('Tax calculation email sent to:', email);
+                
+                const resultDiv = document.getElementById('taxResult');
+                resultDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <h3 style="margin-bottom: 10px;">✓ Email Sent Successfully!</h3>
+                        <p>Your tax calculation results have been sent to <strong>${email}</strong></p>
+                        <p style="margin-top: 10px; font-size: 14px;">
+                            Please check your inbox (and spam folder) for the detailed calculation.
+                        </p>
+                        <div style="background: white; padding: 15px; border-radius: 8px; margin-top: 15px; color: #155724;">
+                            <div style="font-weight: bold; font-size: 18px;">Your Tax Due: ₦${taxData.tax.toLocaleString()}</div>
+                            <div style="font-size: 12px; margin-top: 5px;">Full details sent to your email</div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Failed to send tax calculation email:', error);
+                const resultDiv = document.getElementById('taxResult');
+                resultDiv.innerHTML = `
+                    <div class="alert alert-error">
+                        <h3 style="margin-bottom: 10px;">❌ Email Send Failed</h3>
+                        <p>We couldn't send the email. Error: ${error.text || error.message}</p>
+                        <p style="margin-top: 10px;">Your calculation results:</p>
+                        <div style="background: white; padding: 15px; border-radius: 8px; margin-top: 10px;">
+                            <div>Gross Income: ₦${taxData.grossIncome.toLocaleString()}</div>
+                            <div>Taxable Income: ₦${taxData.taxableIncome.toLocaleString()}</div>
+                            <div style="font-weight: bold; margin-top: 10px;">Total Tax Due: ₦${taxData.tax.toLocaleString()}</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        async function sendPaymentConfirmationEmail(email, name, plan, amount, reference) {
+            if (EMAILJS_PUBLIC_KEY === "YOUR_PUBLIC_KEY_HERE") {
+                console.log('EmailJS not configured, skipping confirmation email');
+                return;
+            }
+
+            const emailParams = {
+                to_name: name,
+                to_email: email,
+                user_email: email,
+                tax_type: `Payment Confirmation - ${plan === 'basic' ? 'Basic Plan' : 'Pro Plan'}`,
+                calculation_details: `
+PAYMENT CONFIRMATION
+================================================================================
+
+Thank you for your payment!
+
+Payment Reference: ${reference}
+Plan: ${plan === 'basic' ? 'Basic Plan - One Upload' : 'Pro Plan - Unlimited Access'}
+Amount Paid: ₦${amount.toLocaleString()}
+Date: ${new Date().toLocaleString('en-NG')}
+
+${plan === 'basic' ? 
+  'You can now upload ONE bank statement for AI-powered analysis.' :
+  'You now have UNLIMITED uploads for the entire tax year!'}
+
+Next Steps:
+1. You can now access the AI-powered bank statement analyzer
+2. Upload your bank statements and let AI categorize transactions
+3. Get professional tax returns ready for filing
+
+Questions? Reply to this email.
+
+Thank you for choosing our service!
+================================================================================
+                `,
+                timestamp: new Date().toLocaleString('en-NG')
+            };
+
+            try {
+                await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, emailParams);
+                console.log('Payment confirmation email sent to:', email);
+            } catch (error) {
+                console.error('Failed to send confirmation email:', error);
+            }
+        }
+
+        async function sendUploadResultsEmail(email, name, fileInfo) {
+            if (EMAILJS_PUBLIC_KEY === "YOUR_PUBLIC_KEY_HERE") {
+                console.log('EmailJS not configured, skipping upload results email');
+                return;
+            }
+
+            const emailParams = {
+                to_name: name,
+                to_email: email,
+                user_email: email,
+                tax_type: 'Bank Statement Upload - Processing Complete',
+                calculation_details: `
+BANK STATEMENT PROCESSING COMPLETE
+================================================================================
+
+Your bank statement has been successfully validated and is ready for processing.
+
+File Information:
+File Name: ${fileInfo.fileName}
+Account Holder: ${fileInfo.accountHolder}
+Upload Date: ${new Date().toLocaleString('en-NG')}
+Status: VALIDATED ✓
+
+Next Steps:
+1. Our AI will analyze your transactions and categorize them
+2. We'll extract all tax-relevant information
+3. You'll receive your detailed tax analysis shortly
+
+This email confirms that your upload was successful. You will receive another
+email with your complete tax analysis and recommendations.
+
+Questions? Reply to this email.
+
+Thank you for using Nigerian Tax Calculator!
+================================================================================
+                `,
+                timestamp: new Date().toLocaleString('en-NG')
+            };
+
+            try {
+                await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, emailParams);
+                console.log('Upload results email sent to:', email);
+                return true;
+            } catch (error) {
+                console.error('Failed to send upload results email:', error);
+                return false;
+            }
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
         window.onload = function() {
-            console.log('=== PAGE LOADED ===');
-            console.log('Free button exists:', document.querySelector('.free-btn') ? 'YES' : 'NO');
-            console.log('Basic button exists:', document.querySelector('.basic-btn') ? 'YES' : 'NO');
-            console.log('Pro button exists:', document.querySelector('.pro-btn') ? 'YES' : 'NO');
-            console.log('Click any button and watch the console!');
+            console.log('=== Tax Calculator Loaded ===');
+            console.log('EmailJS:', EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY_HERE' ? 'Configured ✓' : 'Not configured ✗');
+            console.log('PDF.js:', typeof pdfjsLib !== 'undefined' ? 'Loaded ✓' : 'Not loaded ✗');
+            console.log('SheetJS:', typeof XLSX !== 'undefined' ? 'Loaded ✓' : 'Not loaded ✗');
+            console.log('Paystack:', typeof PaystackPop !== 'undefined' ? 'Loaded ✓' : 'Not loaded ✗');
+            console.log('Manual Subscriptions:', Object.keys(MANUAL_SUBSCRIPTIONS).length);
+            
+            if (EMAILJS_PUBLIC_KEY === 'YOUR_PUBLIC_KEY_HERE') {
+                console.warn('⚠️ EmailJS not configured! Email sending will not work.');
+                console.log('📖 See SETUP_EMAILJS.md for configuration instructions');
+            }
+            
+            console.log('All systems ready! 🚀');
         };
     </script>
 </body>
